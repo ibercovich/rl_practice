@@ -11,24 +11,23 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # ---------- Download dataset once ----------
 DS_URL = ("https://huggingface.co/datasets/newfacade/LeetCodeDataset/"
-          "resolve/main/data/train-00000-of-00001-7af9c0172f3d59b9.json.gz")
-DATA = pathlib.Path("leetcode_train.json.gz")
+          "resolve/main/LeetCodeDataset-train.jsonl")
+DATA = pathlib.Path("leetcode_train.jsonl")
 if not DATA.exists():
     print("↓ downloading LeetCode split …")
     DATA.write_bytes(requests.get(DS_URL, timeout=60).content)
 
 # ---------- Helpers ----------
 def load_tasks(path, split="train"):
-    import gzip
-    with gzip.open(path, "rt") as f:
+    with open(path, "r", encoding="utf-8") as f:
         for line in f:
             row = json.loads(line)
-            if row["split"] == split:
-                yield {
-                    "prompt": row["prompt"],
-                    "signature": row["signature"],
-                    "tests": row["tests"]
-                }
+            # No split filtering needed as the file is already the train split
+            yield {
+                "prompt": row["prompt"],
+                "signature": row["starter_code"], # Use "starter_code"
+                "tests": row["test"] # Use "test" (singular)
+            }
 
 def run_py_solution(code:str, tests:list, limit=1.0) -> bool:
     with tempfile.TemporaryDirectory() as d:
@@ -88,7 +87,7 @@ for step, task in enumerate(islice(tasks, None)):
     ids_in = tok(prompt, return_tensors="pt").to(device)
     logits = model(**ids_in, use_cache=False).logits[:, -1, :]
     first_tok = tok(code, return_tensors="pt").input_ids[:,0].to(device)
-    logp = torch.log_softmax(logits, -1).gather(2, first_tok.unsqueeze(-1)).squeeze()
+    logp = torch.log_softmax(logits, -1).gather(1, first_tok.unsqueeze(-1)).squeeze()
 
     advantage = reward - baseline
     loss = -(advantage * logp)

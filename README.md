@@ -9,7 +9,7 @@ cat ~/.ssh/id_rsa.pub
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv
 source .venv/bin/activate
-UV_TORCH_BACKEND=auto uv pip requests install torch torchvision torchaudio transformers
+UV_TORCH_BACKEND=auto uv pip requests install torch torchvision torchaudio  huggingface_hub transformers
 export HF_HOME="$(pwd)/data/huggingface"
 huggingface-cli login
 python train_rl.py 
