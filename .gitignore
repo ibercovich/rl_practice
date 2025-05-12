@@ -1,6 +1,7 @@
 # This Project
 data/
 leetcode_train.json.gz
+training_logs/
 
 # Editors
 .vscode/
